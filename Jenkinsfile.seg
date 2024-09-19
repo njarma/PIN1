@@ -4,38 +4,54 @@ pipeline {
   options {
     timeout(time: 2, unit: 'MINUTES')
   }
+  
+  parameters {
+    choice(
+      name: 'SEVERITY',
+      choices: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'ALL', 'UNKNOWN' ],
+      description: 'Select the severity level for Trivy scan'
+    )
+  }
 
   environment {
     ARTIFACT_ID = "elbuo8/webapp:${env.BUILD_NUMBER}"
   }
-   stages {
-   stage('Building image') {
+  
+  stages {
+    stage('Building image') {
       steps{
-          sh '''
-          cd webapp
+        sh '''
           docker build -t testapp .
-             '''  
-        }
+        '''  
+      }
     }
-  
-  
     stage('Run tests') {
       steps {
         sh "docker run testapp npm test"
       }
     }
-   stage('Deploy Image') {
+    stage('Deploy Image') {
       steps{
         sh '''
-        docker tag testapp 127.0.0.1:5000/mguazzardo/testapp
-        docker push 127.0.0.1:5000/mguazzardo/testapp   
+          docker tag testapp 127.0.0.1:5000/mguazzardo/testapp
+          docker push 127.0.0.1:5000/mguazzardo/testapp   
         '''
         }
-      }
-   stage('Vulnerability Scan - Docker ') {
-        steps {
-          sh "docker run  -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity=critical 127.0.0.1:5000/mguazzardo/testapp"
+    }
+    stage('Vulnerability Scan - Docker ') {
+      steps {
+        timeout(time: 20, unit: 'MINUTES') {  // Aumenta el tiempo de espera a 20 minutos
+          script {
+                def severity = ''
+                if (params.SEVERITY == 'ALL') {
+                severity = 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+                } else {
+                    severity = params.SEVERITY
+                }
+                sh "docker run  -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.55.1 image --severity=${severity} 127.0.0.1:5000/mguazzardo/testapp"
             }
         }
+      }
     }
+  }
 }
