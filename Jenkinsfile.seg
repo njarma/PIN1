@@ -33,7 +33,7 @@ pipeline {
     stage('Deploy Image') {
       steps{
         sh '''
-          docker tag njarma/testapp
+          docker tag testapp njarma/testapp
           docker push njarma/testapp   
         '''
         }
