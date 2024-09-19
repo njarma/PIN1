@@ -32,10 +32,11 @@ pipeline {
     }
     stage('Deploy Image') {
       steps{
-        sh '''
-          docker tag testapp njarma/testapp
-          docker push njarma/testapp   
-        '''
+          withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
+            sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+            sh 'docker tag testapp njarma/testapp'
+            sh 'docker push njarma/testapp:latest'
+          }
         }
     }
     stage('Vulnerability Scan - Docker ') {
