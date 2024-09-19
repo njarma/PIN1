@@ -14,25 +14,28 @@ pipeline {
   }
 
   environment {
-    artifactId = "njarma/testapp:${env.BUILD_NUMBER}"
-    registryCredential = 'dockerhub'
-    dockerImage = ''
+    ARTIFACT_ID = "elbuo8/webapp:${env.BUILD_NUMBER}"
   }
   
   stages {
     stage('Building image') {
       steps{
-        script {
-          dockerImage = docker.build artifactId
-        } 
+        sh '''
+          docker build -t testapp .
+        '''  
+      }
+    }
+    stage('Run tests') {
+      steps {
+        sh "docker run testapp npm test"
       }
     }
     stage('Deploy Image') {
       steps{
-          script {
-            docker.withRegistry( '', registryCredential ) {
-              dockerImage.push()
-            }
+          withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
+            sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword} docker.io"
+            sh 'docker tag testapp njarma/testapp:latest'
+            sh 'docker push njarma/testapp:latest'
           }
         }
     }
