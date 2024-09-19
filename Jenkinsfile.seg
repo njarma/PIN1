@@ -33,7 +33,7 @@ pipeline {
     stage('Deploy Image') {
       steps{
           withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
-            sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+            sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword} docker.io"
             sh 'docker tag testapp njarma/testapp'
             sh 'docker push njarma/testapp:latest'
           }
