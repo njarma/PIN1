@@ -21,7 +21,7 @@ pipeline {
     stage('Building image') {
       steps {
         sh '''
-          docker build -t njarma/testapp:$BUILD_NUMBER .
+          docker build -t docker.io/njarma/testapp:$BUILD_NUMBER .
         '''  
       }
     }
@@ -37,7 +37,7 @@ pipeline {
     }
     stage('Push') {
       steps {
-          sh 'docker push njarma/testapp:$BUILD_NUMBER'
+          sh 'docker push docker.io/njarma/testapp:$BUILD_NUMBER'
         }
     }
     stage('Vulnerability Scan - Docker ') {
